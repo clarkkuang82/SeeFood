@@ -4,7 +4,7 @@ run_name: resnet50_full_finetune
 data_root: ./data
 image_size: 224
 batch_size: 64
-num_workers: 4
+num_workers: 2
 
 # Optim
 epochs: 30
