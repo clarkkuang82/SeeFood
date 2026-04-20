@@ -1,0 +1,18 @@
+run_name: resnet50_full_finetune
+
+# Data
+data_root: ./data
+image_size: 224
+batch_size: 64
+num_workers: 4
+
+# Optim
+epochs: 30
+lr: 1.0e-3
+momentum: 0.9
+weight_decay: 1.0e-4
+nesterov: true
+
+# Misc
+seed: 42
+output_dir: ./part2_finetune_resnet50

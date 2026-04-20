@@ -1,0 +1,19 @@
+name: seefood
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pyyaml>=6.0
+  - tqdm>=4.65
+  - matplotlib>=3.7
+  - numpy
+  - certifi
+  - pytest>=7.0
+  - pip:
+      # PyTorch recommends pip install. On Apple Silicon this gets MPS-capable
+      # wheels; on Colab the pre-installed torch is used instead (this file is
+      # for local dev).
+      - torch>=2.1
+      - torchvision>=0.16
+      - torchmetrics>=1.2
