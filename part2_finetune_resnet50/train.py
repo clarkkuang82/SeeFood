@@ -106,6 +106,14 @@ def main():
     start = time.time()
     ckpt_path = output_dir / "checkpoints" / "best.pt"
     for epoch in range(epochs):
+        # manual step lr decay
+        if epoch == 20:
+            for g in optimizer.param_groups:
+                g["lr"] = cfg["lr"] * 0.1
+        elif epoch == 26:
+            for g in optimizer.param_groups:
+                g["lr"] = cfg["lr"] * 0.01
+
         tr_loss, tr_top1, tr_top5 = train_one_epoch(
             model, train_loader, criterion, optimizer, device,
             max_batches=max_batches, epoch=epoch,
