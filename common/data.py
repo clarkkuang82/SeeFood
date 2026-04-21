@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
 from torchvision.datasets import Food101
 
@@ -34,15 +34,23 @@ def build_eval_transform(image_size=224, resize=256):
 
 
 def build_food101_splits(root, image_size=224, download=True):
+    # Two copies of the train split: one with train-time aug, one with eval transform.
+    # val indices are drawn from the same permutation so they never overlap train indices.
     train_full = Food101(root=root, split="train",
                          transform=build_train_transform(image_size), download=download)
+    val_full = Food101(root=root, split="train",
+                       transform=build_eval_transform(image_size), download=False)
     test = Food101(root=root, split="test",
                    transform=build_eval_transform(image_size), download=download)
 
-    n_val = int(len(train_full) * VAL_FRACTION)
-    n_train = len(train_full) - n_val
+    n = len(train_full)
+    n_val = int(n * VAL_FRACTION)
     gen = torch.Generator().manual_seed(SPLIT_SEED)
-    train, val = random_split(train_full, [n_train, n_val], generator=gen)
+    perm = torch.randperm(n, generator=gen).tolist()
+    train_idx = perm[n_val:]
+    val_idx = perm[:n_val]
+    train = Subset(train_full, train_idx)
+    val = Subset(val_full, val_idx)
     return train, val, test
 
 
