@@ -34,12 +34,19 @@ def build_eval_transform(image_size=224, resize=256):
 
 
 def build_food101_splits(root, image_size=224, download=True):
-    # Two copies of the train split: one with train-time aug, one with eval transform.
-    # val indices are drawn from the same permutation so they never overlap train indices.
-    train_full = Food101(root=root, split="train",
-                         transform=build_train_transform(image_size), download=download)
-    val_full = Food101(root=root, split="train",
-                       transform=build_eval_transform(image_size), download=False)
+    # set USE_TRAIN_AUG = True to re-enable addition train-time augmentation
+    USE_TRAIN_AUG = False
+
+    if USE_TRAIN_AUG:
+        train_full = Food101(root=root, split="train",
+                             transform=build_train_transform(image_size), download=download)
+        val_full = Food101(root=root, split="train",
+                           transform=build_eval_transform(image_size), download=False)
+    else:
+        tf = build_eval_transform(image_size)
+        train_full = Food101(root=root, split="train", transform=tf, download=download)
+        val_full = train_full
+
     test = Food101(root=root, split="test",
                    transform=build_eval_transform(image_size), download=download)
 
