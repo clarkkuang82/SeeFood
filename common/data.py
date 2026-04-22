@@ -35,7 +35,7 @@ def build_eval_transform(image_size=224, resize=256):
 
 def build_food101_splits(root, image_size=224, download=True):
     # set USE_TRAIN_AUG = True to re-enable addition train-time augmentation
-    USE_TRAIN_AUG = False
+    USE_TRAIN_AUG = True
 
     if USE_TRAIN_AUG:
         train_full = Food101(root=root, split="train",
