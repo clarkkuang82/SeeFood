@@ -113,11 +113,10 @@ def main():
     start = time.time()
     ckpt_path = output_dir / "checkpoints" / "best.pt"
     for epoch in range(epochs):
-        # manual step lr decay
-        if epoch == 20:
+        if epoch == 7:
             for g in optimizer.param_groups:
                 g["lr"] = cfg["lr"] * 0.1
-        elif epoch == 26:
+        elif epoch == 9:
             for g in optimizer.param_groups:
                 g["lr"] = cfg["lr"] * 0.01
 

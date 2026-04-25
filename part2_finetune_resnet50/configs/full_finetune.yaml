@@ -10,7 +10,7 @@ batch_size: 64
 num_workers: 2
 
 # Optim
-epochs: 30
+epochs: 10
 lr: 1.0e-3
 momentum: 0.9
 weight_decay: 5.0e-4
