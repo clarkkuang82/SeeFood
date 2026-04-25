@@ -9,7 +9,8 @@ import torch.nn as nn
 import yaml
 
 sys.path.append(str(Path(__file__).parent.parent))
-from common.data import build_food101_splits, build_loaders, get_device
+from common.data import (build_food101_splits, build_food101_splits_hf,
+                         build_loaders, get_device)
 from common.trainer import evaluate
 from part2_finetune_resnet50.train import build_model
 
@@ -26,7 +27,15 @@ def main():
     device = get_device()
     output_dir = Path(cfg["output_dir"])
 
-    train, val, test = build_food101_splits(root=cfg["data_root"], image_size=cfg["image_size"], download=False)
+    pipeline = cfg.get("data_pipeline", "torchvision")
+    if pipeline == "hf":
+        train, val, test = build_food101_splits_hf(
+            image_size=cfg["image_size"], cache_dir=cfg.get("hf_cache_dir"),
+        )
+    else:
+        train, val, test = build_food101_splits(
+            root=cfg["data_root"], image_size=cfg["image_size"], download=False,
+        )
     _, _, test_loader = build_loaders(
         train, val, test, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"],
         pin_memory=device.type == "cuda",

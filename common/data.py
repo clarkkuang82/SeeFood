@@ -61,6 +61,37 @@ def build_food101_splits(root, image_size=224, download=True):
     return train, val, test
 
 
+class _HFFood101Dataset(torch.utils.data.Dataset):
+    # Wraps a HuggingFace `food101` split so it behaves like a torchvision Dataset.
+    def __init__(self, hf_dataset, transform):
+        self.data = hf_dataset
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        item = self.data[idx]
+        image = item["image"].convert("RGB")
+        return self.transform(image), item["label"]
+
+
+def build_food101_splits_hf(image_size=224, cache_dir=None):
+    # Mirrors the HuggingFace pipeline used by part 3 (vit_train.py):
+    # Resize((H, W)) squashes to a square; no CenterCrop, no augmentation.
+    from datasets import load_dataset
+
+    tf = transforms.Compose([
+        transforms.Resize((image_size, image_size)),
+        transforms.ToTensor(),
+        transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+    ])
+    ds = load_dataset("food101", cache_dir=cache_dir)
+    train = _HFFood101Dataset(ds["train"], tf)
+    test = _HFFood101Dataset(ds["validation"], tf)
+    return train, test, test
+
+
 def build_loaders(train, val, test, batch_size=64, num_workers=4, pin_memory=True):
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=True,
                               num_workers=num_workers, pin_memory=pin_memory, drop_last=True)

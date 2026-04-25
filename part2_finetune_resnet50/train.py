@@ -18,7 +18,8 @@ from torch.utils.data import DataLoader, TensorDataset
 from torchvision.models import ResNet50_Weights, resnet50
 
 sys.path.append(str(Path(__file__).parent.parent))
-from common.data import build_food101_splits, build_loaders, set_seed, get_device
+from common.data import (build_food101_splits, build_food101_splits_hf,
+                         build_loaders, set_seed, get_device)
 from common.trainer import evaluate, train_one_epoch
 from common.metrics import count_params
 
@@ -81,9 +82,15 @@ def main():
             batch_size=8, image_size=cfg["image_size"],
         )
     else:
-        train, val, test = build_food101_splits(
-            root=cfg["data_root"], image_size=cfg["image_size"], download=True,
-        )
+        pipeline = cfg.get("data_pipeline", "torchvision")
+        if pipeline == "hf":
+            train, val, test = build_food101_splits_hf(
+                image_size=cfg["image_size"], cache_dir=cfg.get("hf_cache_dir"),
+            )
+        else:
+            train, val, test = build_food101_splits(
+                root=cfg["data_root"], image_size=cfg["image_size"], download=True,
+            )
         train_loader, val_loader, _ = build_loaders(
             train, val, test, batch_size=cfg["batch_size"], num_workers=cfg["num_workers"],
             pin_memory=device.type == "cuda",
