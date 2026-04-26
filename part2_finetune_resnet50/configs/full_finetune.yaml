@@ -16,7 +16,7 @@ num_workers: 2
 # Optim: sgd | adamw   /   scheduler: manual | cosine
 optimizer: adamw
 scheduler: cosine
-epochs: 10
+epochs: 30
 lr: 1.0e-4
 momentum: 0.9
 weight_decay: 1.0e-4
