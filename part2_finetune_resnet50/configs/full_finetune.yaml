@@ -15,9 +15,9 @@ num_workers: 2
 
 # Optim: sgd | adamw   /   scheduler: manual | cosine | cosine_warmup
 optimizer: adamw
-scheduler: cosine_warmup
+scheduler: cosine
 warmup_epochs: 3
-epochs: 30
+epochs: 15
 lr: 1.0e-4
 momentum: 0.9
 weight_decay: 1.0e-4
