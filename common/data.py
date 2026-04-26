@@ -76,19 +76,22 @@ class _HFFood101Dataset(torch.utils.data.Dataset):
         return self.transform(image), item["label"]
 
 
-def build_food101_splits_hf(image_size=224, cache_dir=None):
+def build_food101_splits_hf(image_size=224, cache_dir=None, train_aug=False):
     # Mirrors the HuggingFace pipeline used by part 3 (vit_train.py):
-    # Resize((H, W)) squashes to a square; no CenterCrop, no augmentation.
+    # Resize((H, W)) squashes to a square; no CenterCrop.
+    # train_aug=True applies build_train_transform to the training split only.
     from datasets import load_dataset
 
-    tf = transforms.Compose([
+    eval_tf = transforms.Compose([
         transforms.Resize((image_size, image_size)),
         transforms.ToTensor(),
         transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
     ])
+    train_tf = build_train_transform(image_size) if train_aug else eval_tf
+
     ds = load_dataset("food101", cache_dir=cache_dir)
-    train = _HFFood101Dataset(ds["train"], tf)
-    test = _HFFood101Dataset(ds["validation"], tf)
+    train = _HFFood101Dataset(ds["train"], train_tf)
+    test = _HFFood101Dataset(ds["validation"], eval_tf)
     return train, test, test
 
 

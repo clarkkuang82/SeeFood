@@ -31,6 +31,7 @@ def main():
     if pipeline == "hf":
         train, val, test = build_food101_splits_hf(
             image_size=cfg["image_size"], cache_dir=cfg.get("hf_cache_dir"),
+            train_aug=cfg.get("train_aug", False),
         )
     else:
         train, val, test = build_food101_splits(

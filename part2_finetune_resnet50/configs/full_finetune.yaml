@@ -6,6 +6,7 @@ model_name: vit_b16
 # Data
 # data_pipeline: torchvision (default, with our val holdout) | hf (mirrors part 3, no val holdout)
 data_pipeline: hf #torchvision
+train_aug: true
 data_root: ./data
 hf_cache_dir: null
 image_size: 224
