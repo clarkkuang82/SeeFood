@@ -14,7 +14,7 @@ import torch
 import torch.nn as nn
 import yaml
 from torch.optim import SGD, AdamW
-from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torch.utils.data import DataLoader, TensorDataset
 from torchvision.models import ResNet50_Weights, ViT_B_16_Weights, resnet50, vit_b_16
 
@@ -121,7 +121,15 @@ def main():
     max_batches = 2 if args.smoke else None
 
     sched_name = cfg.get("scheduler", "manual")
-    scheduler = CosineAnnealingLR(optimizer, T_max=epochs) if sched_name == "cosine" else None
+    if sched_name == "cosine":
+        scheduler = CosineAnnealingLR(optimizer, T_max=epochs)
+    elif sched_name == "cosine_warmup":
+        warmup_epochs = cfg.get("warmup_epochs", 3)
+        warmup = LinearLR(optimizer, start_factor=0.01, total_iters=warmup_epochs)
+        cosine = CosineAnnealingLR(optimizer, T_max=epochs - warmup_epochs)
+        scheduler = SequentialLR(optimizer, [warmup, cosine], milestones=[warmup_epochs])
+    else:
+        scheduler = None
     criterion = nn.CrossEntropyLoss()
 
     # Train

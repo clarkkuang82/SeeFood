@@ -13,9 +13,10 @@ image_size: 224
 batch_size: 64
 num_workers: 2
 
-# Optim: sgd | adamw   /   scheduler: manual | cosine
+# Optim: sgd | adamw   /   scheduler: manual | cosine | cosine_warmup
 optimizer: adamw
-scheduler: cosine
+scheduler: cosine_warmup
+warmup_epochs: 3
 epochs: 30
 lr: 1.0e-4
 momentum: 0.9
