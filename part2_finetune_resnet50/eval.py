@@ -41,7 +41,7 @@ def main():
         pin_memory=device.type == "cuda",
     )
 
-    model = build_model(num_classes=101).to(device)
+    model = build_model(model_name=cfg.get("model_name", "resnet50"), num_classes=101).to(device)
     state = torch.load(args.ckpt, map_location=device)
     model.load_state_dict(state["model"])
     criterion = nn.CrossEntropyLoss()

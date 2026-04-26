@@ -1,4 +1,7 @@
-run_name: resnet50_full_finetune
+run_name: vit_b16_full_finetune
+
+# Model: resnet50 | vit_b16
+model_name: vit_b16
 
 # Data
 # data_pipeline: torchvision (default, with our val holdout) | hf (mirrors part 3, no val holdout)
@@ -9,11 +12,13 @@ image_size: 224
 batch_size: 64
 num_workers: 2
 
-# Optim
+# Optim: sgd | adamw   /   scheduler: manual | cosine
+optimizer: adamw
+scheduler: cosine
 epochs: 10
-lr: 1.0e-3
+lr: 1.0e-4
 momentum: 0.9
-weight_decay: 5.0e-4
+weight_decay: 1.0e-4
 nesterov: true
 
 # Misc

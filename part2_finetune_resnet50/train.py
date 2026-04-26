@@ -13,9 +13,10 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import yaml
-from torch.optim import SGD
+from torch.optim import SGD, AdamW
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader, TensorDataset
-from torchvision.models import ResNet50_Weights, resnet50
+from torchvision.models import ResNet50_Weights, ViT_B_16_Weights, resnet50, vit_b_16
 
 sys.path.append(str(Path(__file__).parent.parent))
 from common.data import (build_food101_splits, build_food101_splits_hf,
@@ -35,10 +36,16 @@ def build_smoke_loaders(batch_size=8, image_size=224, num_classes=101, n_train=6
     return train_loader, val_loader
 
 
-def build_model(num_classes=101):
-    model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
-    return model
+def build_model(model_name="resnet50", num_classes=101):
+    if model_name == "resnet50":
+        model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
+        return model
+    if model_name == "vit_b16":
+        model = vit_b_16(weights=ViT_B_16_Weights.IMAGENET1K_V1)
+        model.heads.head = nn.Linear(model.heads.head.in_features, num_classes)
+        return model
+    raise ValueError(f"unknown model_name: {model_name}")
 
 
 def plot_curves(history, out_path):
@@ -97,14 +104,24 @@ def main():
         )
 
     # Model
-    model = build_model(num_classes=101).to(device)
+    model_name = cfg.get("model_name", "resnet50")
+    model = build_model(model_name=model_name, num_classes=101).to(device)
     params = count_params(model)
 
-    optimizer = SGD(model.parameters(), lr=cfg["lr"], momentum=cfg["momentum"],
-                    weight_decay=cfg["weight_decay"], nesterov=cfg["nesterov"])
-    criterion = nn.CrossEntropyLoss()
+    optim_name = cfg.get("optimizer", "sgd")
+    if optim_name == "adamw":
+        optimizer = AdamW(model.parameters(), lr=cfg["lr"],
+                          weight_decay=cfg["weight_decay"])
+    else:
+        optimizer = SGD(model.parameters(), lr=cfg["lr"], momentum=cfg["momentum"],
+                        weight_decay=cfg["weight_decay"], nesterov=cfg["nesterov"])
+
     epochs = 2 if args.smoke else cfg["epochs"]
     max_batches = 2 if args.smoke else None
+
+    sched_name = cfg.get("scheduler", "manual")
+    scheduler = CosineAnnealingLR(optimizer, T_max=epochs) if sched_name == "cosine" else None
+    criterion = nn.CrossEntropyLoss()
 
     # Train
     history = []
@@ -113,12 +130,13 @@ def main():
     start = time.time()
     ckpt_path = output_dir / "checkpoints" / "best.pt"
     for epoch in range(epochs):
-        if epoch == 7:
-            for g in optimizer.param_groups:
-                g["lr"] = cfg["lr"] * 0.1
-        elif epoch == 9:
-            for g in optimizer.param_groups:
-                g["lr"] = cfg["lr"] * 0.01
+        if sched_name == "manual":
+            if epoch == 7:
+                for g in optimizer.param_groups:
+                    g["lr"] = cfg["lr"] * 0.1
+            elif epoch == 9:
+                for g in optimizer.param_groups:
+                    g["lr"] = cfg["lr"] * 0.01
 
         tr_loss, tr_top1, tr_top5 = train_one_epoch(
             model, train_loader, criterion, optimizer, device,
@@ -128,6 +146,8 @@ def main():
             model, val_loader, criterion, device,
             max_batches=max_batches, desc=f"val[{epoch}]",
         )
+        if scheduler is not None:
+            scheduler.step()
         history.append({
             "epoch": epoch,
             "train_loss": tr_loss, "train_top1": tr_top1, "train_top5": tr_top5,
