@@ -53,9 +53,14 @@ def main():
         num_workers=cfg["num_workers"], pin_memory=device.type == "cuda",
     )
 
-    # Class names — pull from torchvision Food101 (HF labels share the same order)
-    from torchvision.datasets import Food101
-    classes = Food101(root=cfg["data_root"], split="test", download=False).classes
+    # Class names — pull from whichever pipeline we are using
+    if pipeline == "hf":
+        from datasets import load_dataset
+        classes = load_dataset("food101", cache_dir=cfg.get("hf_cache_dir"),
+                               split="train").features["label"].names
+    else:
+        from torchvision.datasets import Food101
+        classes = Food101(root=cfg["data_root"], split="test", download=False).classes
 
     model = build_model(model_name=cfg.get("model_name", "resnet50"),
                         num_classes=len(classes)).to(device)
